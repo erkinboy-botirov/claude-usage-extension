@@ -33,6 +33,11 @@ A Chrome extension that monitors your Claude.ai usage limits and displays them i
 
 ## Settings
 
+### Badge Display
+Choose what the extension badge shows:
+- **Session usage** - Current 5-hour session utilization (default)
+- **Weekly usage** - 7-day usage limit utilization
+
 ### Periodic Notifications
 Receive regular usage updates at your chosen interval:
 - 30 minutes
