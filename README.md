@@ -2,9 +2,11 @@
 
 A Chrome extension that monitors your Claude.ai usage limits and displays them in a convenient popup. Get notified when you're approaching your limits.
 
-![Popup UI](screenshots/popup.png)
-![Settings](screenshots/settings.png)
-![Notifications](screenshots/notifications.png)
+<p align="center">
+  <img src="screenshots/popup.png" width="250" alt="Popup UI">
+  <img src="screenshots/settings.png" width="250" alt="Settings">
+  <img src="screenshots/notifications.png" width="300" alt="Notifications">
+</p>
 
 ## Features
 
