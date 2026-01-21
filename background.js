@@ -99,8 +99,8 @@ function formatWeeklyReset(isoString) {
   return resetTime.toLocaleString('en-US', options);
 }
 
-// Send periodic usage notification
-function sendPeriodicNotification(usage) {
+// Build usage notification message
+function buildUsageMessage(usage) {
   const sessionUtil = usage.five_hour?.utilization ?? 0;
   const weeklyUtil = usage.seven_day?.utilization ?? 0;
   const sessionReset = formatSessionReset(usage.five_hour?.resets_at);
@@ -111,59 +111,44 @@ function sendPeriodicNotification(usage) {
   message += `\nWeekly: ${Math.round(weeklyUtil)}%`;
   if (weeklyReset) message += ` (resets ${weeklyReset})`;
 
-  chrome.notifications.create('periodic-' + Date.now(), {
+  return message;
+}
+
+// Send usage notification
+function sendUsageNotification(usage, isAlert = false) {
+  chrome.notifications.create('usage-' + Date.now(), {
     type: 'basic',
     iconUrl: 'icons/icon128.png',
-    title: 'Claude Usage Update',
-    message: message,
-    priority: 1
+    title: isAlert ? 'Claude Usage Alert' : 'Claude Usage Update',
+    message: buildUsageMessage(usage),
+    priority: isAlert ? 2 : 1
   });
 }
 
-// Check thresholds and send alert notifications if crossed
+// Check thresholds and send alert notification if crossed
 async function checkThresholdAlerts(usage, settings) {
   const { lastNotified } = await chrome.storage.local.get('lastNotified') || { lastNotified: {} };
   const newLastNotified = { ...lastNotified };
 
-  // Check session threshold
-  const sessionUtil = usage.five_hour?.utilization;
-  if (sessionUtil !== null && sessionUtil !== undefined) {
-    const wasAbove = lastNotified.session === true;
-    const isAbove = sessionUtil >= settings.sessionThreshold;
+  const sessionUtil = usage.five_hour?.utilization ?? 0;
+  const weeklyUtil = usage.seven_day?.utilization ?? 0;
 
-    if (isAbove && !wasAbove) {
-      chrome.notifications.create('threshold-session', {
-        type: 'basic',
-        iconUrl: 'icons/icon128.png',
-        title: 'Claude Usage Alert',
-        message: `Session usage at ${Math.round(sessionUtil)}% (threshold: ${settings.sessionThreshold}%)`,
-        priority: 2
-      });
-      newLastNotified.session = true;
-    } else if (!isAbove) {
-      newLastNotified.session = false;
-    }
+  const sessionWasAbove = lastNotified.session === true;
+  const weeklyWasAbove = lastNotified.weekly === true;
+  const sessionIsAbove = sessionUtil >= settings.sessionThreshold;
+  const weeklyIsAbove = weeklyUtil >= settings.weeklyThreshold;
+
+  // Send alert if either threshold just crossed
+  const sessionJustCrossed = sessionIsAbove && !sessionWasAbove;
+  const weeklyJustCrossed = weeklyIsAbove && !weeklyWasAbove;
+
+  if (sessionJustCrossed || weeklyJustCrossed) {
+    sendUsageNotification(usage, true);
   }
 
-  // Check weekly threshold
-  const weeklyUtil = usage.seven_day?.utilization;
-  if (weeklyUtil !== null && weeklyUtil !== undefined) {
-    const wasAbove = lastNotified.weekly === true;
-    const isAbove = weeklyUtil >= settings.weeklyThreshold;
-
-    if (isAbove && !wasAbove) {
-      chrome.notifications.create('threshold-weekly', {
-        type: 'basic',
-        iconUrl: 'icons/icon128.png',
-        title: 'Claude Usage Alert',
-        message: `Weekly usage at ${Math.round(weeklyUtil)}% (threshold: ${settings.weeklyThreshold}%)`,
-        priority: 2
-      });
-      newLastNotified.weekly = true;
-    } else if (!isAbove) {
-      newLastNotified.weekly = false;
-    }
-  }
+  // Update state
+  newLastNotified.session = sessionIsAbove;
+  newLastNotified.weekly = weeklyIsAbove;
 
   await chrome.storage.local.set({ lastNotified: newLastNotified });
 }
@@ -194,7 +179,7 @@ async function fetchAndCache(options = {}) {
 
     // Send periodic notification if triggered and enabled
     if (triggerPeriodic && currentSettings.periodicEnabled) {
-      sendPeriodicNotification(usage);
+      sendUsageNotification(usage, false);
     }
 
     // Check threshold alerts if triggered and enabled
