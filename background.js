@@ -71,8 +71,8 @@ function updateBadge(utilization) {
   chrome.action.setBadgeBackgroundColor({ color: getColor(utilization) });
 }
 
-// Format time remaining
-function formatTimeRemaining(isoString) {
+// Format session time remaining (hours/minutes)
+function formatSessionReset(isoString) {
   if (!isoString) return '';
 
   const resetTime = new Date(isoString);
@@ -90,17 +90,26 @@ function formatTimeRemaining(isoString) {
   return `${minutes}m`;
 }
 
+// Format weekly reset as day/time (e.g., "Fri 11:30 PM")
+function formatWeeklyReset(isoString) {
+  if (!isoString) return '';
+
+  const resetTime = new Date(isoString);
+  const options = { weekday: 'short', hour: 'numeric', minute: '2-digit' };
+  return resetTime.toLocaleString('en-US', options);
+}
+
 // Send periodic usage notification
 function sendPeriodicNotification(usage) {
   const sessionUtil = usage.five_hour?.utilization ?? 0;
   const weeklyUtil = usage.seven_day?.utilization ?? 0;
-  const sessionReset = formatTimeRemaining(usage.five_hour?.resets_at);
-  const weeklyReset = formatTimeRemaining(usage.seven_day?.resets_at);
+  const sessionReset = formatSessionReset(usage.five_hour?.resets_at);
+  const weeklyReset = formatWeeklyReset(usage.seven_day?.resets_at);
 
   let message = `Session: ${Math.round(sessionUtil)}%`;
   if (sessionReset) message += ` (resets in ${sessionReset})`;
   message += `\nWeekly: ${Math.round(weeklyUtil)}%`;
-  if (weeklyReset) message += ` (resets in ${weeklyReset})`;
+  if (weeklyReset) message += ` (resets ${weeklyReset})`;
 
   chrome.notifications.create('periodic-' + Date.now(), {
     type: 'basic',
