@@ -272,6 +272,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     chrome.storage.local.get(['usage', 'lastFetch', 'error']).then(sendResponse);
     return true;
   }
+
+  if (message.type === 'testNotification') {
+    chrome.storage.local.get('usage').then(({ usage }) => {
+      if (usage) {
+        sendUsageNotification(usage, false);
+      }
+    });
+    return true;
+  }
 });
 
 // Also run on startup (for when browser restarts)

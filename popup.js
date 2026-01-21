@@ -224,3 +224,8 @@ document.getElementById('periodic-interval').addEventListener('change', saveSett
 document.getElementById('threshold-enabled').addEventListener('change', saveSettings);
 document.getElementById('session-threshold').addEventListener('change', saveSettings);
 document.getElementById('weekly-threshold').addEventListener('change', saveSettings);
+
+// Test notification button
+document.getElementById('test-notification').addEventListener('click', () => {
+  chrome.runtime.sendMessage({ type: 'testNotification' });
+});

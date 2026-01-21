@@ -256,6 +256,24 @@ input[type="checkbox"] {
   margin-left: 24px;
 }
 
+/* Test button */
+.test-btn {
+  width: 100%;
+  padding: 8px 12px;
+  margin-top: 8px;
+  background: var(--bg-100);
+  border: 1px solid var(--border-300);
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--text-100);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.test-btn:hover {
+  background: var(--border-300);
+}
+
 /* Hidden class */
 .hidden {
   display: none !important;
