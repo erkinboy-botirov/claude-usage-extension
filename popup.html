@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=320">
+  <title>Claude Usage Monitor</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>Plan usage limits</h1>
+      <button id="settings-toggle" class="icon-btn" title="Settings">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Error/Login Message (hidden by default) -->
+    <div id="error-container" class="error-container hidden">
+      <p id="error-message"></p>
+    </div>
+
+    <!-- Usage Content -->
+    <div id="usage-content">
+      <!-- Current Session (5-hour) -->
+      <div class="section">
+        <h2>Current session</h2>
+        <p class="reset-time" id="daily-reset">Resets in --</p>
+        <div class="progress-container">
+          <div class="progress-bar" id="daily-progress" style="width: 0%"></div>
+        </div>
+        <p class="usage-percent" id="daily-percent">--% used</p>
+      </div>
+
+      <!-- Weekly Limits -->
+      <div class="section">
+        <h2>Weekly limits</h2>
+
+        <!-- All models -->
+        <div class="subsection">
+          <h3>All models</h3>
+          <p class="reset-time" id="weekly-reset">Resets --</p>
+          <div class="progress-container">
+            <div class="progress-bar" id="weekly-progress" style="width: 0%"></div>
+          </div>
+          <p class="usage-percent" id="weekly-percent">--% used</p>
+        </div>
+
+        <!-- Sonnet only -->
+        <div class="subsection">
+          <h3>Sonnet only</h3>
+          <p class="reset-time" id="sonnet-status">--</p>
+          <div class="progress-container">
+            <div class="progress-bar" id="sonnet-progress" style="width: 0%"></div>
+          </div>
+          <p class="usage-percent" id="sonnet-percent">--% used</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <span class="last-updated" id="last-updated">Last updated: --</span>
+      <button id="refresh-btn" class="icon-btn" title="Refresh">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <polyline points="1 20 1 14 7 14"></polyline>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Settings Panel (hidden by default) -->
+    <div id="settings-panel" class="settings-panel hidden">
+      <h3>Settings</h3>
+
+      <!-- Periodic Notifications -->
+      <div class="settings-group">
+        <label class="setting-row checkbox-row">
+          <input type="checkbox" id="periodic-enabled">
+          <span>Periodic notifications</span>
+        </label>
+
+        <label class="setting-row indent">
+          <span>Notify every</span>
+          <select id="periodic-interval">
+            <option value="30">30 min</option>
+            <option value="60" selected>1 hour</option>
+            <option value="120">2 hours</option>
+            <option value="240">4 hours</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- Threshold Alerts -->
+      <div class="settings-group">
+        <label class="setting-row checkbox-row">
+          <input type="checkbox" id="threshold-enabled">
+          <span>Threshold alerts</span>
+        </label>
+
+        <label class="setting-row indent">
+          <span>Session threshold</span>
+          <div class="threshold-input">
+            <input type="number" id="session-threshold" min="0" max="100" value="80">
+            <span>%</span>
+          </div>
+        </label>
+
+        <label class="setting-row indent">
+          <span>Weekly threshold</span>
+          <div class="threshold-input">
+            <input type="number" id="weekly-threshold" min="0" max="100" value="80">
+            <span>%</span>
+          </div>
+        </label>
+
+        <p class="setting-hint indent">Checks every 5 minutes when enabled</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
