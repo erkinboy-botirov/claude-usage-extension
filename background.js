@@ -161,10 +161,8 @@ async function fetchAndCache(options = {}) {
   const { triggerPeriodic = false, triggerThreshold = false } = options;
 
   try {
-    console.log('Fetching usage data...', { triggerPeriodic, triggerThreshold });
     const orgId = await getOrgId();
     const usage = await getUsage(orgId);
-    console.log('Got usage:', usage);
 
     await chrome.storage.local.set({
       usage,
@@ -209,7 +207,6 @@ async function setupAlarms(settings) {
 
   // Setup periodic notification alarm if enabled
   if (settings.periodicEnabled) {
-    console.log('Setting up periodic alarm:', settings.periodicInterval, 'minutes');
     chrome.alarms.create('periodicNotification', {
       periodInMinutes: settings.periodicInterval
     });
@@ -217,7 +214,6 @@ async function setupAlarms(settings) {
 
   // Setup threshold check alarm if enabled (frequent checks)
   if (settings.thresholdEnabled) {
-    console.log('Setting up threshold alarm:', settings.thresholdCheckInterval, 'minutes');
     chrome.alarms.create('thresholdCheck', {
       periodInMinutes: settings.thresholdCheckInterval
     });
@@ -244,8 +240,6 @@ chrome.runtime.onInstalled.addListener(async () => {
 
 // Handle alarms
 chrome.alarms.onAlarm.addListener(async (alarm) => {
-  console.log('Alarm triggered:', alarm.name);
-
   if (alarm.name === 'periodicNotification') {
     await fetchAndCache({ triggerPeriodic: true });
   } else if (alarm.name === 'thresholdCheck') {
