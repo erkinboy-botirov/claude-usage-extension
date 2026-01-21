@@ -129,6 +129,7 @@ function showError(message) {
 async function loadSettings() {
   const { settings } = await chrome.storage.sync.get('settings');
   const defaults = {
+    badgeDisplay: 'session',
     periodicEnabled: false,
     periodicInterval: 60,
     thresholdEnabled: false,
@@ -139,6 +140,7 @@ async function loadSettings() {
   // Merge with defaults to handle old/missing settings
   const s = { ...defaults, ...settings };
 
+  document.getElementById('badge-display').value = s.badgeDisplay;
   document.getElementById('periodic-enabled').checked = s.periodicEnabled;
   document.getElementById('periodic-interval').value = s.periodicInterval.toString();
   document.getElementById('threshold-enabled').checked = s.thresholdEnabled;
@@ -149,6 +151,7 @@ async function loadSettings() {
 // Save settings to storage
 async function saveSettings() {
   const settings = {
+    badgeDisplay: document.getElementById('badge-display').value,
     periodicEnabled: document.getElementById('periodic-enabled').checked,
     periodicInterval: parseInt(document.getElementById('periodic-interval').value, 10),
     thresholdEnabled: document.getElementById('threshold-enabled').checked,
@@ -219,6 +222,7 @@ document.getElementById('settings-toggle').addEventListener('click', () => {
 document.getElementById('refresh-btn').addEventListener('click', refreshUsage);
 
 // Settings change listeners
+document.getElementById('badge-display').addEventListener('change', saveSettings);
 document.getElementById('periodic-enabled').addEventListener('change', saveSettings);
 document.getElementById('periodic-interval').addEventListener('change', saveSettings);
 document.getElementById('threshold-enabled').addEventListener('change', saveSettings);

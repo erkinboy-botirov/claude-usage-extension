@@ -1,5 +1,8 @@
 // Default settings
 const DEFAULT_SETTINGS = {
+  // Badge display
+  badgeDisplay: 'session', // 'session' or 'weekly'
+
   // Periodic notifications - notify every N minutes with current usage
   periodicEnabled: false,
   periodicInterval: 60, // minutes
@@ -169,13 +172,15 @@ async function fetchAndCache(options = {}) {
       error: null
     });
 
-    // Update badge with session usage
-    const sessionUtil = usage.five_hour?.utilization;
-    updateBadge(sessionUtil);
-
     // Get settings
     const { settings } = await chrome.storage.sync.get('settings');
-    const currentSettings = settings || DEFAULT_SETTINGS;
+    const currentSettings = { ...DEFAULT_SETTINGS, ...settings };
+
+    // Update badge based on setting
+    const badgeUtil = currentSettings.badgeDisplay === 'weekly'
+      ? usage.seven_day?.utilization
+      : usage.five_hour?.utilization;
+    updateBadge(badgeUtil);
 
     // Send periodic notification if triggered and enabled
     if (triggerPeriodic && currentSettings.periodicEnabled) {
@@ -258,6 +263,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'settingsUpdated') {
     const newSettings = message.settings;
     setupAlarms(newSettings);
+
+    // Update badge with new display setting
+    chrome.storage.local.get('usage').then(({ usage }) => {
+      if (usage) {
+        const badgeUtil = newSettings.badgeDisplay === 'weekly'
+          ? usage.seven_day?.utilization
+          : usage.five_hour?.utilization;
+        updateBadge(badgeUtil);
+      }
+    });
 
     // If threshold alerts just enabled, do an immediate check
     if (newSettings.thresholdEnabled) {
